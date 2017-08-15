@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quick Sort</title>
+
+  <style>
+    .container {
+      margin: 10px 3%;
+    }
+    .input-container label, .input-container #nums-input {
+      display: block;
+      margin: 10px 0;
+    }
+    .input-container #nums-input {
+      width: 60%;
+      height: 200px;
+    }
+    .input-container input {
+      padding: 5px 8px;
+      border: 1px solid #D2D7D3;
+    }
+    .input-container button {
+      margin: 10px 0;
+      padding: 5px 20px;
+      background: #22A7F0;
+      color: #ECF0F1;
+      outline: none;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .input-container button.block {
+      display: block;
+    }
+    .input-container button:hover {
+      background: #2574A9;
+    }
+    .input-container button:active {
+      background: #3A539B;
+    }
+
+    canvas {
+      width: 60%;
+      border: 1px solid #D2D7D3;
+    }
+  </style>
+</head>
+<body>
+
+<div class="input-container container">
+  <label>随机生成</label>
+  <input placeholder="数目" id="ran">
+  <input placeholder="min"> ~ <input placeholder="max">
+  <button>生成</button>
+
+  <label for="nums-input">输入数据，以逗号分隔</label>
+  <textarea id="nums-input"></textarea>
+  <button type="button" id="sort-btn" class="block">排序</button>
+</div>
+
+<div class="container">
+  <canvas id="sort-canvas"></canvas>
+</div>
+
+<script>
+  window.onload = function () {
+    let log = console.log.bind(console)
+
+    let sortCanvas = new SortCanvas('sort-canvas')
+
+    async function sleep (timeout) {
+      return new Promise((resolve, reject) => {
+        setTimeout(function() {
+          resolve()
+        }, timeout)
+      })
+    }
+
+    document.getElementById('sort-btn').addEventListener('click', function () {
+      let nums = document.getElementById('nums-input').value.split(',')
+      nums = nums.map(function (num) {
+        return parseFloat(num)
+      })
+      sortCanvas.sort(nums)
+    })
+
+    function SortCanvas (canvasId) {
+      this.nums = null
+      this.step = 25
+
+      this.canvas = document.getElementById(canvasId)
+      this.context = this.canvas.getContext('2d')
+
+      this.pixelRatio = window.devicePixelRatio || 1
+      this.width = this.canvas.clientWidth
+      this.height = this.canvas.clientHeight
+
+      this.canvas.width = this.width * this.pixelRatio
+      this.canvas.height = this.height * this.pixelRatio
+      this.context.scale(this.pixelRatio, this.pixelRatio)
+
+      this.COLOR = {
+        BLACK: '#22313F',
+        DARK_BLACK: 'black',
+        LIGHT_BLACK: '#95A5A6',
+        RED: '#E08283'
+      }
+    }
+    SortCanvas.prototype.draw = function (nums, left, right, baseIndex) {
+
+      this.clear()
+      this.drawLine({x: this.step, y: this.step}, {x: this.width - this.step, y: this.step}, this.COLOR.BLACK)
+
+      let verMeasure = (this.height - this.step * 2) / this.getMax(nums)
+      let horMeasure = (this.width - this.step * 2) / (2 * nums.length - 1)
+      nums.forEach((num, index) => {
+        this.drawLine(
+          {x: this.step + horMeasure * (index * 2 + .5), y: this.step},
+          {x: this.step + horMeasure * (index * 2 + .5), y: this.step + num * verMeasure},
+          this.getColor(index, left, right, baseIndex), horMeasure)
+      })
+      log(this.canvas.width, this.canvas.height, nums)
+    }
+    SortCanvas.prototype.getColor = function (index, left, right, baseIndex) {
+      if (index === baseIndex) {
+        return this.COLOR.RED
+      }
+      if (index >= left && index <= right) {
+        return this.COLOR.DARK_BLACK
+      }
+      return this.COLOR.LIGHT_BLACK
+    }
+    SortCanvas.prototype.drawLine = function (point, point2, color, lineWidth) {
+      this.context.beginPath()
+      this.context.moveTo(point.x, this.height - point.y)
+      this.context.lineTo(point2.x, this.height - point2.y)
+      this.context.strokeStyle = color
+      this.context.lineWidth = lineWidth || 2
+      this.context.stroke()
+    }
+    SortCanvas.prototype.clear = function () {
+      this.context.clearRect(0, 0, this.width, this.height)
+    }
+
+    SortCanvas.prototype.getMax = function (nums) {
+      return Math.max.apply(null, nums)
+    }
+    SortCanvas.prototype.sort = async function (nums) {
+      this.nums = nums
+      await this.quickSort(this.nums, 0, this.nums.length - 1)
+    }
+    SortCanvas.prototype.quickSort = async function (nums, left, right) {
+      this.draw(nums, left, right, left)
+      await sleep(500)
+      if (left < right) {
+        let i = left, j = right, base = nums[left]
+        while(i < j) {
+          while(i < j && nums[j] >= base) {
+            --j
+          }
+          if(i < j) {
+            nums[i++] = nums[j]
+            nums[j] = base
+            this.draw(nums, left, right, j)
+            await sleep(500)
+          }
+          while(i < j && nums[i] <= base) {
+            ++i
+          }
+          if (i < j) {
+            nums[j--] = nums[i]
+            nums[i] = base
+            this.draw(nums, left, right, i)
+            await sleep(500)
+          }
+        }
+        nums[i] = base
+        await this.quickSort(nums, left, i - 1)
+        await this.quickSort(nums, i + 1, right)
+      }
+    }
+
+
+  }
+</script>
+</body>
+</html>
