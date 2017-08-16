@@ -50,9 +50,9 @@
 
 <div class="input-container container">
   <label>随机生成</label>
-  <input placeholder="数目" id="ran">
-  <input placeholder="min"> ~ <input placeholder="max">
-  <button>生成</button>
+  <input placeholder="数目" id="rand-total">
+  <input placeholder="min" id="rand-min"> ~ <input placeholder="max" id="rand-max">
+  <button type="button" id="rand-btn">生成</button>
 
   <label for="nums-input">输入数据，以逗号分隔</label>
   <textarea id="nums-input"></textarea>
@@ -69,6 +69,12 @@
 
     let sortCanvas = new SortCanvas('sort-canvas')
 
+    let numsInput = document.getElementById('nums-input')
+    let randTotalInput = document.getElementById('rand-total')
+    let randMinInput = document.getElementById('rand-min')
+    let randMaxInput = document.getElementById('rand-max')
+
+
     async function sleep (timeout) {
       return new Promise((resolve, reject) => {
         setTimeout(function() {
@@ -78,11 +84,22 @@
     }
 
     document.getElementById('sort-btn').addEventListener('click', function () {
-      let nums = document.getElementById('nums-input').value.split(',')
+      let nums = numsInput.value.split(',')
       nums = nums.map(function (num) {
         return parseFloat(num)
       })
       sortCanvas.sort(nums)
+    })
+
+    document.getElementById('rand-btn').addEventListener('click', function () {
+      let randTotal = randTotalInput.value
+      let randMin = randMinInput.value
+      let randMax = randMaxInput.value
+      let nums = new Array(randTotal)
+      for (let i = 0; i < randTotal; i++) {
+        nums[i] = Math.random() * (randMax + randMin) - randMin
+      }
+      numsInput.value = nums.join(',')
     })
 
     function SortCanvas (canvasId) {
